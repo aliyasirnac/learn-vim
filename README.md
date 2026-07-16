@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vim Ustası
 
-## Getting Started
+Metin düzenlemeyi bir daha asla eskisi gibi görmeyeceksin. A'dan Z'ye, tamamen ücretsiz ve oyunlaştırılmış bir Vim eğitimi: hareketlerden operatör grameriyle text object'lere, registerlardan makrolara, çoklu dosya iş akışından ex komutlarına kadar her şeyi tarayıcıda çalışan **gerçek bir Vim motoruyla** öğretir.
 
-First, run the development server:
+Video yok, quiz yok — her tuşu kendin basarsın, motor gerçek zamanlı yorumlar.
+
+## Neden
+
+Piyasadaki benzer siteler (VIM Adventures gibi) birkaç seviyeden sonra ücretli. Bu proje aynı fikri baştan sona, ücretsiz ve tam kapsamlı olarak sunar.
+
+## Öne çıkanlar
+
+- **Gerçek Vim motoru** ([lib/vim/](lib/vim/engine.ts)) — saf TypeScript, UI'dan bağımsız bir reducer: modlar, hareketler, operatör + sayaç grameri, text object'ler (`iw i" i( i{ ip it`), registerlar, makrolar, nokta tekrarı, undo/redo, marks/jumplist, arama, ex komutları (`:s :g :normal :sort` vb.) ve çoklu buffer (`:e :b :bn gf :wa`).
+- **Müfredat** ([lib/curriculum/](lib/curriculum/index.ts)) — 19 modül, 84 ders. Her ders tek bir yeni kavram öğretir (scaffolding), modüller %60 tamamlanınca açılır (mastery learning), her modül eski komutları karıştıran bir tekrar/boss dersiyle biter (spaced repetition). Detaylı pedagoji notları: [docs/CURRICULUM.md](docs/CURRICULUM.md).
+- **Tuş golfü** — her dersin bir "par" tuş sayısı var; en verimli komut kombinasyonunu bulmak 3 yıldız kazandırır (deliberate practice).
+- **İlerleme** — zustand + `persist` ile yıldız/XP/seviye takibi, tarayıcıda kalıcı.
+- **Serbest Alan** ([app/playground](app/playground/page.tsx)) — kopya kağıdıyla birlikte, ders akışı dışında serbestçe pratik yapılacak alan.
+
+## Başlarken
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) adresini aç. `/learn` müfredat haritası, `/playground` serbest pratik alanıdır.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Test
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun test lib/
+```
 
-## Learn More
+66 motor testi + 87 müfredat testi: müfredattaki **her dersin referans çözümü** motordan geçirilip hem hedefe ulaştığı hem de par'ı aşmadığı otomatik doğrulanır. Yeni ders eklerken çözümü [lib/curriculum/curriculum.test.ts](lib/curriculum/curriculum.test.ts) içindeki `SOLUTIONS` haritasına eklemek yeterli.
 
-To learn more about Next.js, take a look at the following resources:
+## Proje yapısı
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+lib/vim/          Vim motoru (engine, motions, text objects, search, ex commands)
+lib/curriculum/   Modül/ders tanımları ve müfredat testi
+lib/game/         Puanlama (par/yıldız/XP) ve zustand ilerleme deposu
+components/vim/   VimEditor — motoru render eden terminal bileşeni
+components/game/  Müfredat haritası, ders oynatıcı, serbest alan, ana sayfa demosu
+docs/CURRICULUM.md  Pedagojik ilkeler ve modül listesi
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Teknoloji
 
-## Deploy on Vercel
+Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · zustand · framer-motion · shadcn/ui bileşenleri (kısmen kurulu — bkz. `tsconfig.json`'daki `components/ui` exclude notu)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Not
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Bu proje [özel bir Next.js sürümü](AGENTS.md) kullanır; API ve konvansiyonlar standart eğitim materyallerinden farklı olabilir. `node_modules/next/dist/docs/` altındaki dahili dokümantasyona bakın.
