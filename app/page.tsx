@@ -2,6 +2,18 @@ import Link from "next/link";
 import { TerminalDemo } from "@/components/game/TerminalDemo";
 import { MODULES, TOTAL_LESSONS } from "@/lib/curriculum";
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Vim Ustası",
+  description: "Tarayıcıda çalışan gerçek Vim motoruyla oyunlaştırılmış Türkçe Vim eğitimi.",
+  applicationCategory: "EducationalApplication",
+  operatingSystem: "Any",
+  inLanguage: "tr-TR",
+  isAccessibleForFree: true,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "TRY" },
+};
+
 const FEATURES = [
   {
     icon: "⌨️",
@@ -28,6 +40,10 @@ const FEATURES = [
 export default function Home() {
   return (
     <div className="flex-1">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       {/* hero */}
       <section className="mx-auto max-w-5xl px-4 pt-16 pb-10 text-center">
         <p className="text-(--vim-text-dim) text-sm tracking-[0.35em] uppercase">:enter the dojo</p>
@@ -65,6 +81,7 @@ export default function Home() {
 
       {/* özellikler */}
       <section className="mx-auto max-w-5xl px-4 pb-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="sr-only">Vim Ustası özellikleri</h2>
         {FEATURES.map((feature) => (
           <div key={feature.title} className="terminal-frame rounded-lg p-5">
             <div className="text-3xl">{feature.icon}</div>

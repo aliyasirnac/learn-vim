@@ -25,6 +25,11 @@ bun run dev
 
 [http://localhost:3000](http://localhost:3000) adresini aç. `/learn` müfredat haritası, `/playground` serbest pratik alanıdır.
 
+## Üretim SEO ayarı
+
+Deploy ortamında canonical URL, sitemap ve robots bağlantılarının doğru oluşması için
+`.env.example` içindeki `NEXT_PUBLIC_SITE_URL` değerini gerçek alan adınla tanımla.
+
 ## Test
 
 ```bash
