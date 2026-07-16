@@ -30,5 +30,11 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // components/ui: shadcn registry'den kopyalanan bileşenlerin bağımlılıkları
+    // (recharts, cmdk, @hugeicons vb.) kurulu değil; kullanılan bileşen olursa
+    // önce bağımlılığını kurup bu satırı kaldırın.
+    "components/ui"
+  ]
 }
