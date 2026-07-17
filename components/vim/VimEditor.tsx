@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Position, VimState } from "@/lib/vim";
 import { isBufferModified } from "@/lib/vim";
-import { eventToVimKey } from "@/lib/vim/keys";
+import { resolveControlKey } from "@/lib/vim/keys";
 import { findAllMatches } from "@/lib/vim/search";
 import { posKey } from "@/lib/game/scoring";
 import { cn } from "@/lib/utils";
@@ -59,20 +59,25 @@ export function VimEditor({
   onArrowKey,
 }: VimEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const composingRef = useRef(false);
   const buf = state.buffers[state.currentBufferId];
   const mode = MODE_LABELS[state.mode] ?? MODE_LABELS.normal;
 
   useEffect(() => {
-    if (autoFocus && !readOnly) containerRef.current?.focus();
+    if (autoFocus && !readOnly) inputRef.current?.focus();
   }, [autoFocus, readOnly, state.currentBufferId]);
 
+  // Kontrol tuşları (Esc, Enter, ok tuşları, Ctrl kombinasyonları) doğrudan
+  // burada işlenir. Basılabilir karakterler kasıtlı olarak buradan GEÇİRİLMEZ
+  // — gizli <input>'un native `input` olayına bırakılır ki Türkçe gibi
+  // klavyelerde ölü tuş olan ^ ve ` ile AltGr'li { } [ ] doğru üretilebilsin.
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (readOnly || !onKey) return;
-      const key = eventToVimKey(e);
+      const key = resolveControlKey(e);
       if (key === null) return;
       e.preventDefault();
-      e.stopPropagation();
       if (key === "<Arrow>") {
         onArrowKey?.();
         return;
@@ -80,6 +85,36 @@ export function VimEditor({
       onKey(key);
     },
     [onKey, readOnly, onArrowKey]
+  );
+
+  const flushComposedInput = useCallback(
+    (el: HTMLInputElement) => {
+      const value = el.value;
+      el.value = "";
+      if (!value || readOnly || !onKey) return;
+      for (const ch of value) onKey(ch);
+    },
+    [onKey, readOnly]
+  );
+
+  const handleCompositionStart = useCallback(() => {
+    composingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(
+    (e: React.CompositionEvent<HTMLInputElement>) => {
+      composingRef.current = false;
+      flushComposedInput(e.currentTarget);
+    },
+    [flushComposedInput]
+  );
+
+  const handleInput = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      if (composingRef.current) return;
+      flushComposedInput(e.currentTarget);
+    },
+    [flushComposedInput]
   );
 
   // görünür pencere
@@ -99,14 +134,35 @@ export function VimEditor({
   return (
     <div
       ref={containerRef}
-      tabIndex={readOnly ? -1 : 0}
-      onKeyDown={handleKeyDown}
+      onMouseDown={() => inputRef.current?.focus()}
       className={cn(
-        "terminal-frame rounded-lg overflow-hidden outline-none transition-shadow",
-        !readOnly && "focus:shadow-[0_0_0_2px_var(--vim-green-dim),0_20px_60px_rgba(0,0,0,0.5)]",
+        "terminal-frame relative rounded-lg overflow-hidden transition-shadow",
+        !readOnly && "focus-within:shadow-[0_0_0_2px_var(--vim-green-dim),0_20px_60px_rgba(0,0,0,0.5)]",
         className
       )}
     >
+      {/* Gerçek metin girişi: klavye odağı burada tutulur. Görünmez ama
+          gerçek bir <input> olduğu için tarayıcının native ölü tuş/AltGr/IME
+          birleştirmesinden (compose) geçer — düz bir div bunu yapamaz. */}
+      {!readOnly && (
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="text"
+          autoCapitalize="off"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          aria-hidden="true"
+          tabIndex={0}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-default outline-none"
+          onKeyDown={handleKeyDown}
+          onInput={handleInput}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
+        />
+      )}
+
       {/* buffer sekmeleri */}
       {state.bufferOrder.length > 1 && (
         <div className="flex gap-px bg-(--vim-bg) border-b border-(--vim-border) px-2 pt-2">
